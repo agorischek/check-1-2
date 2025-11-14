@@ -2,10 +2,26 @@
 
 import React, { useEffect, useState } from "react";
 import { render, Text } from "ink";
+import { cli } from "cleye";
 import { getCheckCommands } from "./index.js";
 import { runCheck } from "./runner.js";
 import { CheckUI } from "./ui.js";
 import { CheckResult } from "./types.js";
+
+const argv = cli({
+  name: "checks",
+  version: "0.0.2",
+  parameters: ["[cwd]"],
+  flags: {
+    cwd: {
+      type: String,
+      description: "Working directory to run checks from",
+    },
+  },
+});
+
+// Determine working directory: --cwd flag > positional argument > current directory
+const cwd = argv.flags.cwd || argv._[0] || process.cwd();
 
 function App() {
   const [results, setResults] = useState<CheckResult[]>([]);
@@ -16,8 +32,7 @@ function App() {
   useEffect(() => {
     async function execute() {
       try {
-        const checkCommands = getCheckCommands();
-        const cwd = process.cwd();
+        const checkCommands = getCheckCommands(cwd);
 
         const start = Date.now();
         setStartTime(start);
