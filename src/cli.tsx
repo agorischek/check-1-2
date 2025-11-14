@@ -34,16 +34,18 @@ function App() {
         
         setResults(initialResults);
 
-        // Run checks in parallel and update results as they complete
+        // Run checks in parallel and update results as they stream
         const promises = checkCommands.map(async ({ name, command }) => {
-          const result = await runCheck(name, command, cwd);
-          setResults((prev) => {
-            const updated = [...prev];
-            const index = updated.findIndex((r) => r.name === result.name);
-            if (index !== -1) {
-              updated[index] = result;
-            }
-            return updated;
+          const result = await runCheck(name, command, cwd, (updatedResult) => {
+            // Update results in real-time as output streams
+            setResults((prev) => {
+              const updated = [...prev];
+              const index = updated.findIndex((r) => r.name === updatedResult.name);
+              if (index !== -1) {
+                updated[index] = updatedResult;
+              }
+              return updated;
+            });
           });
           return result;
         });

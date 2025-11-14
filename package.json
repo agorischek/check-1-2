@@ -24,6 +24,7 @@
   "license": "MIT",
   "dependencies": {
     "ink": "^4.4.1",
+    "ora": "^9.0.0",
     "prettier": "^3.6.2",
     "react": "^18.2.0"
   },

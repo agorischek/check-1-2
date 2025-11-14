@@ -1,6 +1,21 @@
-import React, { useEffect } from 'react';
-import { Box, Text, useApp } from 'ink';
+import React, { useEffect, useState } from 'react';
+import { Box, Text, useApp, useStdout } from 'ink';
 import { CheckResult } from './types.js';
+
+// Simple spinner component
+function Spinner() {
+  const [frame, setFrame] = useState(0);
+  const frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFrame((f) => (f + 1) % frames.length);
+    }, 80);
+    return () => clearInterval(interval);
+  }, [frames.length]);
+  
+  return <Text>{frames[frame]}</Text>;
+}
 
 interface CheckUIProps {
   results: CheckResult[];
@@ -9,18 +24,21 @@ interface CheckUIProps {
 }
 
 function CheckItem({ result }: { result: CheckResult }) {
+  const { stdout } = useStdout();
+  const terminalWidth = stdout.columns || 80;
+
   const getStatusSymbol = () => {
     switch (result.status) {
       case 'running':
-        return '⏳';
+        return '...';
       case 'success':
-        return '✅';
+        return '✓';
       case 'failed':
-        return '❌';
+        return '×';
     }
   };
 
-  const getStatusColor = () => {
+  const getStatusBgColor = () => {
     switch (result.status) {
       case 'running':
         return 'yellow';
@@ -36,31 +54,106 @@ function CheckItem({ result }: { result: CheckResult }) {
     return `${(ms / 1000).toFixed(2)}s`;
   };
 
+  // Wrap text to terminal width, accounting for the "│ " prefix (2 chars)
+  const wrapText = (text: string, width: number): string[] => {
+    const maxWidth = Math.max(10, width - 2); // Account for "│ " prefix
+    if (text.length <= maxWidth) {
+      return [text];
+    }
+    
+    const lines: string[] = [];
+    const words = text.split(/\s+/).filter(w => w.length > 0);
+    let currentLine = '';
+
+    for (const word of words) {
+      const testLine = currentLine ? `${currentLine} ${word}` : word;
+      if (testLine.length <= maxWidth) {
+        currentLine = testLine;
+      } else {
+        if (currentLine) {
+          lines.push(currentLine);
+        }
+        // If a single word is longer than maxWidth, break it
+        if (word.length > maxWidth) {
+          let remaining = word;
+          while (remaining.length > maxWidth) {
+            lines.push(remaining.substring(0, maxWidth));
+            remaining = remaining.substring(maxWidth);
+          }
+          currentLine = remaining;
+        } else {
+          currentLine = word;
+        }
+      }
+    }
+    if (currentLine) {
+      lines.push(currentLine);
+    }
+    return lines.length > 0 ? lines : [''];
+  };
+
+  // Get output lines (combine stdout and stderr)
+  const getOutputLines = (): string[] => {
+    const lines: string[] = [];
+    
+    // Show all output, including while running (streaming)
+    if (result.stdout) {
+      const stdoutLines = result.stdout.split('\n').filter(line => line.trim() || line.length > 0);
+      lines.push(...stdoutLines);
+    }
+    if (result.stderr) {
+      const stderrLines = result.stderr.split('\n').filter(line => line.trim() || line.length > 0);
+      lines.push(...stderrLines);
+    }
+    
+    // Show placeholder only if running and no output yet
+    if (result.status === 'running' && lines.length === 0) {
+      lines.push('...');
+    }
+    
+    return lines;
+  };
+
+  const outputLines = getOutputLines();
+  const showOutput = result.status === 'running' || outputLines.length > 0;
+
   return (
     <Box flexDirection="column" marginBottom={1}>
+      {/* Header: ┌ [ ✓ name ] */}
       <Box>
-        <Text>
-          {getStatusSymbol()} <Text color={getStatusColor()}>{result.name}</Text>
-          {result.status !== 'running' && (
-            <Text dimColor> ({formatDuration(result.duration)})</Text>
-          )}
+        <Text dimColor>┌ </Text>
+        <Text backgroundColor={getStatusBgColor()}>
+          {' '}
+          {getStatusSymbol()} {result.name}{' '}
         </Text>
       </Box>
-      {result.status === 'failed' && (
-        <Box flexDirection="column" marginLeft={2} marginTop={1}>
-          {result.stdout && (
-            <Box flexDirection="column" marginBottom={1}>
-              <Text color="gray" dimColor>STDOUT:</Text>
-              <Text>{result.stdout}</Text>
-            </Box>
-          )}
-          {result.stderr && (
-            <Box flexDirection="column">
-              <Text color="red" dimColor>STDERR:</Text>
-              <Text color="red">{result.stderr}</Text>
-            </Box>
-          )}
+      
+      {/* Blank line with bar after header */}
+      <Text dimColor>│ </Text>
+      
+      {/* Output lines: │ ... with wrapping support */}
+      {showOutput && (
+        <Box flexDirection="column">
+          {outputLines.flatMap((line, index) => {
+            // Wrap each line to terminal width
+            const wrappedLines = wrapText(line || ' ', terminalWidth);
+            return wrappedLines.map((wrappedLine, wrapIndex) => (
+              <Text key={`${index}-${wrapIndex}`}>
+                <Text dimColor>│</Text> {wrappedLine}
+              </Text>
+            ));
+          })}
         </Box>
+      )}
+      
+      {/* Blank line before footer, only if there was output */}
+      {showOutput && result.status !== 'running' && (
+        <Text dimColor>│ </Text>
+      )}
+      
+      {/* Footer: └ (duration) */}
+      {result.status !== 'running' && (
+        <Text dimColor>└ <Text dimColor>({formatDuration(result.duration)})</Text></Text>
       )}
     </Box>
   );
@@ -92,34 +185,52 @@ export function CheckUI({ results, allComplete, startTime }: CheckUIProps) {
   const totalDuration = startTime ? Date.now() - startTime : 0;
 
   return (
-    <Box flexDirection="column" padding={1}>
-      <Box flexDirection="column" marginBottom={1}>
+    <Box flexDirection="column" height="100%">
+      {/* Scrollable output area */}
+      <Box flexDirection="column" flexGrow={1} padding={1}>
         {results.map((result) => (
           <CheckItem key={result.name} result={result} />
         ))}
       </Box>
       
-      {allComplete && (
-        <Box flexDirection="column" marginTop={1} borderTop={true}>
-          <Text bold>
-            Summary: {successCount} passed, {failedCount} failed
-            {runningCount > 0 && `, ${runningCount} running`}
-          </Text>
-          <Text dimColor>
-            Total time: {formatDuration(totalDuration)}
-          </Text>
-          {failedCount > 0 && (
-            <Text color="red" bold>
-              Some checks failed!
+      {/* Fixed bottom section */}
+      <Box flexDirection="column" borderTop={true} paddingX={1} paddingY={1}>
+        {/* List all checks with spinners/status */}
+        {results.map((result) => {
+          let statusElement: React.ReactNode;
+          if (result.status === 'running') {
+            statusElement = <Spinner />;
+          } else if (result.status === 'success') {
+            statusElement = <Text color="green">✓</Text>;
+          } else {
+            statusElement = <Text color="red">×</Text>;
+          }
+          
+          return (
+            <Box key={result.name} flexDirection="row">
+              <Box width={2}>{statusElement}</Box>
+              <Text>{result.name}</Text>
+            </Box>
+          );
+        })}
+        
+        {/* Overall status line */}
+        <Box marginTop={1}>
+          {!allComplete ? (
+            <Text color="yellow">
+              Running... <Text dimColor>({formatDuration(totalDuration)})</Text>
             </Text>
-          )}
-          {failedCount === 0 && successCount > 0 && (
+          ) : failedCount > 0 ? (
+            <Text color="red" bold>
+              {failedCount} {failedCount === 1 ? 'check' : 'checks'} failed
+            </Text>
+          ) : (
             <Text color="green" bold>
-              All checks passed! 🎉
+              All checks passed
             </Text>
           )}
         </Box>
-      )}
+      </Box>
     </Box>
   );
 }
