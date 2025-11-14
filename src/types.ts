@@ -1,6 +1,6 @@
 export interface CheckResult {
   name: string;
-  status: 'running' | 'success' | 'failed';
+  status: "running" | "success" | "failed";
   stdout: string;
   stderr: string;
   exitCode: number | null;
@@ -8,7 +8,6 @@ export interface CheckResult {
 }
 
 export interface PackageJson {
-  checks?: string[];
+  checks?: string[] | { runner?: string; scripts: string[] };
   scripts?: Record<string, string>;
 }
-

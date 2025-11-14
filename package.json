@@ -1,6 +1,6 @@
 {
   "name": "check-1-2",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Run multiple package.json scripts in parallel with a nice progress UI",
   "type": "module",
   "main": "dist/index.js",
@@ -8,11 +8,14 @@
     "checks": "./dist/cli.js"
   },
   "scripts": {
+    "checks": "bun run src/cli.tsx",
+    "format": "prettier --write .",
     "dev": "tsx src/cli.tsx",
     "prepublishOnly": "npm run build",
     "lint": "eslint .",
     "check:format": "prettier --check .",
-    "build": "tsc"
+    "build": "tsc",
+    "test": "bun test"
   },
   "keywords": [
     "ci",
@@ -40,9 +43,13 @@
     "typescript": "^5.3.3",
     "typescript-eslint": "^8.46.4"
   },
-  "checks": [
-    "lint",
-    "check:format",
-    "build"
-  ]
+  "checks": {
+    "runner": "bun",
+    "scripts": [
+      "check:format",
+      "build",
+      "lint",
+      "test"
+    ]
+  }
 }

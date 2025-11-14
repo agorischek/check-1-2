@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
-import React, { useEffect, useState } from 'react';
-import { render, Text } from 'ink';
-import { getCheckCommands } from './index.js';
-import { runCheck } from './runner.js';
-import { CheckUI } from './ui.jsx';
-import { CheckResult } from './types.js';
+import React, { useEffect, useState } from "react";
+import { render, Text } from "ink";
+import { getCheckCommands } from "./index.js";
+import { runCheck } from "./runner.js";
+import { CheckUI } from "./ui.js";
+import { CheckResult } from "./types.js";
 
 function App() {
   const [results, setResults] = useState<CheckResult[]>([]);
@@ -18,20 +18,20 @@ function App() {
       try {
         const checkCommands = getCheckCommands();
         const cwd = process.cwd();
-        
+
         const start = Date.now();
         setStartTime(start);
-        
+
         // Initialize results with running status
         const initialResults: CheckResult[] = checkCommands.map(({ name }) => ({
           name,
-          status: 'running' as const,
-          stdout: '',
-          stderr: '',
+          status: "running" as const,
+          stdout: "",
+          stderr: "",
           exitCode: null,
           duration: 0,
         }));
-        
+
         setResults(initialResults);
 
         // Run checks in parallel and update results as they stream
@@ -40,7 +40,9 @@ function App() {
             // Update results in real-time as output streams
             setResults((prev) => {
               const updated = [...prev];
-              const index = updated.findIndex((r) => r.name === updatedResult.name);
+              const index = updated.findIndex(
+                (r) => r.name === updatedResult.name,
+              );
               if (index !== -1) {
                 updated[index] = updatedResult;
               }
@@ -65,8 +67,13 @@ function App() {
     return <Text color="red">Error: {error}</Text>;
   }
 
-  return <CheckUI results={results} allComplete={allComplete} startTime={startTime} />;
+  return (
+    <CheckUI
+      results={results}
+      allComplete={allComplete}
+      startTime={startTime}
+    />
+  );
 }
 
 render(<App />);
-
