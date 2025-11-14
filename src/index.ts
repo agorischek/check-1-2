@@ -1,87 +1,54 @@
-import { readFileSync } from "fs";
-import { join } from "path";
 import { runCheck } from "./runner.js";
-import { CheckResult, PackageJson } from "./types.js";
+import { CheckResult } from "./types.js";
+import { ResolvedOptions } from "./resolveOptions.js";
 
 export function getCheckCommands(
-  cwd: string = process.cwd(),
+  options: ResolvedOptions,
 ): Array<{ name: string; command: string; runner: string }> {
-  // Read package.json
-  const packageJsonPath = join(cwd, "package.json");
-  let packageJson: PackageJson;
+  const { scripts, runner, cd, cwd } = options;
 
-  try {
-    const content = readFileSync(packageJsonPath, "utf-8");
-    packageJson = JSON.parse(content);
-  } catch (error) {
-    throw new Error(
-      `Failed to read package.json: ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
-
-  // Get checks - support both array and object syntax
-  const checksConfig = packageJson.checks;
-  if (!checksConfig) {
-    throw new Error('No "checks" property found in package.json');
-  }
-
-  let checks: string[];
-  let runner: string = "npm";
-
-  if (Array.isArray(checksConfig)) {
-    // Legacy format: checks: ["lint", "type-check"]
-    checks = checksConfig;
-  } else if (typeof checksConfig === "object" && checksConfig.scripts) {
-    // New format: checks: { runner: "bun", scripts: ["lint", "type-check"] }
-    checks = checksConfig.scripts;
-    runner = checksConfig.runner || "npm";
-  } else {
-    throw new Error(
-      'Invalid "checks" format. Expected array or object with "scripts" property',
-    );
-  }
-
-  if (checks.length === 0) {
-    throw new Error('"checks" array is empty');
-  }
-
-  // Get scripts
-  const scripts = packageJson.scripts || {};
-
-  // Validate all checks exist as scripts
-  const missing = checks.filter((check) => !scripts[check]);
-  if (missing.length > 0) {
-    throw new Error(`Missing scripts for checks: ${missing.join(", ")}`);
-  }
-
-  // Return check commands with runner
-  return checks.map((check) => {
-    // Build command based on runner
-    // npm/pnpm/yarn use "run", bun uses "run" as well
-    const runCommand =
+  return scripts.map(({ name, command: scriptCommand }) => {
+    // Build command using npx (or specified runner)
+    // For npx, we run the actual script command with npx
+    // For other runners, use their standard format
+    let runCommand: string;
+    if (runner === "npx") {
+      // Extract the first word (package name) from the script command
+      // e.g., "eslint ." -> "npx -y eslint ."
+      const parts = scriptCommand.trim().split(/\s+/);
+      const packageName = parts[0];
+      const args = parts.slice(1).join(" ");
+      runCommand = args ? `npx -y ${packageName} ${args}` : `npx -y ${packageName}`;
+    } else if (
       runner === "npm" ||
       runner === "pnpm" ||
       runner === "yarn" ||
       runner === "bun"
-        ? `${runner} run ${check}`
-        : `${runner} ${check}`;
+    ) {
+      runCommand = `${runner} run ${name}`;
+    } else {
+      runCommand = `${runner} ${name}`;
+    }
+
+    // If --cd flag is set, prepend cd command
+    const command = cd ? `cd ${cwd} && ${runCommand}` : runCommand;
 
     return {
-      name: check,
-      command: runCommand,
+      name,
+      command,
       runner,
     };
   });
 }
 
 export async function runChecks(
-  cwd: string = process.cwd(),
+  options: ResolvedOptions,
 ): Promise<CheckResult[]> {
-  const checkCommands = getCheckCommands(cwd);
+  const checkCommands = getCheckCommands(options);
 
   // Run all checks in parallel
   const promises = checkCommands.map(({ name, command }) => {
-    return runCheck(name, command, cwd);
+    return runCheck(name, command, options.cwd);
   });
 
   const results = await Promise.all(promises);

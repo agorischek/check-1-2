@@ -7,21 +7,24 @@ import { getCheckCommands } from "./index.js";
 import { runCheck } from "./runner.js";
 import { CheckUI } from "./ui.js";
 import { CheckResult } from "./types.js";
+import { resolveOptions } from "./resolveOptions.js";
 
 const argv = cli({
   name: "checks",
   version: "0.0.2",
-  parameters: ["[cwd]"],
   flags: {
-    cwd: {
+    cd: {
+      type: Boolean,
+      description: "Change directory to current working dir before running scripts",
+    },
+    runner: {
       type: String,
-      description: "Working directory to run checks from",
+      description: "Runner to use (e.g., npx, npm, pnpm, yarn, bun)",
     },
   },
 });
 
-// Determine working directory: --cwd flag > positional argument > current directory
-const cwd = argv.flags.cwd || argv._[0] || process.cwd();
+const options = resolveOptions(argv, process.cwd());
 
 function App() {
   const [results, setResults] = useState<CheckResult[]>([]);
@@ -32,7 +35,7 @@ function App() {
   useEffect(() => {
     async function execute() {
       try {
-        const checkCommands = getCheckCommands(cwd);
+        const checkCommands = getCheckCommands(options);
 
         const start = Date.now();
         setStartTime(start);
@@ -51,7 +54,7 @@ function App() {
 
         // Run checks in parallel and update results as they stream
         const promises = checkCommands.map(async ({ name, command }) => {
-          const result = await runCheck(name, command, cwd, (updatedResult) => {
+          const result = await runCheck(name, command, options.cwd, (updatedResult) => {
             // Update results in real-time as output streams
             setResults((prev) => {
               const updated = [...prev];
