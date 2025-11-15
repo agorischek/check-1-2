@@ -3,7 +3,7 @@ import { readPackageUpSync, readPackageUp } from "read-package-up";
 import type { PackageJsonWithChecks } from "./types.js";
 
 export interface ResolvedOptions {
-  scripts: Array<{ name: string; command: string }>;
+  scripts: Array<{ check: string; fix?: string }>;
   runner: string;
   cwd: string;
   format: "auto" | "interactive" | "ci";
@@ -107,16 +107,16 @@ export function resolveOptions(
     throw new Error('No "checks" property found in package.json');
   }
 
-  let scripts: string[];
+  let rawScripts: (string | { check: string; fix?: string })[];
   let runner: string = "npm";
   let format: "auto" | "interactive" | "ci" = "auto";
 
   if (Array.isArray(checksConfig)) {
-    // Legacy format: checks: ["lint", "type-check"]
-    scripts = checksConfig;
+    // Legacy format: checks: ["lint", "type-check"] or checks: [{ check: "lint", fix: "lint:fix" }]
+    rawScripts = checksConfig;
   } else if (typeof checksConfig === "object" && checksConfig.scripts) {
     // New format: checks: { runner: "bun", format: "ci", scripts: ["lint", "type-check"] }
-    scripts = checksConfig.scripts;
+    rawScripts = checksConfig.scripts;
     runner = checksConfig.runner || "npm";
     format = checksConfig.format || "auto";
   } else {
@@ -125,17 +125,52 @@ export function resolveOptions(
     );
   }
 
-  if (scripts.length === 0) {
+  if (rawScripts.length === 0) {
     throw new Error('"checks" array is empty');
   }
 
-  // Get scripts from package.json to validate and get commands
+  // Get scripts from package.json to validate
   const packageScripts = packageJson.scripts || {};
 
-  // Validate all checks exist as scripts
-  const missing = scripts.filter((script) => !packageScripts[script]);
-  if (missing.length > 0) {
-    throw new Error(`Missing scripts for checks: ${missing.join(", ")}`);
+  // Normalize scripts: convert strings to { check: string, fix?: undefined }
+  // and validate that check scripts exist
+  const normalizedScripts: Array<{ check: string; fix?: string }> = [];
+  const missingChecks: string[] = [];
+  const missingFixes: string[] = [];
+
+  for (const script of rawScripts) {
+    if (typeof script === "string") {
+      // String format: "lint" → { check: "lint", fix: undefined }
+      if (!packageScripts[script]) {
+        missingChecks.push(script);
+      } else {
+        normalizedScripts.push({ check: script });
+      }
+    } else if (typeof script === "object" && script.check) {
+      // Object format: { check: "lint", fix: "lint:fix" }
+      if (!packageScripts[script.check]) {
+        missingChecks.push(script.check);
+      } else if (script.fix && !packageScripts[script.fix]) {
+        missingFixes.push(script.fix);
+      } else {
+        normalizedScripts.push({
+          check: script.check,
+          fix: script.fix,
+        });
+      }
+    } else {
+      throw new Error(
+        'Invalid script format. Expected string or object with "check" property',
+      );
+    }
+  }
+
+  if (missingChecks.length > 0) {
+    throw new Error(`Missing scripts for checks: ${missingChecks.join(", ")}`);
+  }
+
+  if (missingFixes.length > 0) {
+    throw new Error(`Missing scripts for fixes: ${missingFixes.join(", ")}`);
   }
 
   // Resolve runner: CLI arg > package.json > default (npm)
@@ -144,15 +179,8 @@ export function resolveOptions(
   // Resolve format: CLI arg > package.json > default (auto)
   const resolvedFormat = cliArgs.flags.format || format;
 
-  // Map script names to their commands
-  // We've already validated all scripts exist, so they're guaranteed to be defined
-  const scriptsWithCommands = scripts.map((name) => ({
-    name,
-    command: packageScripts[name]!,
-  }));
-
   return {
-    scripts: scriptsWithCommands,
+    scripts: normalizedScripts,
     runner: resolvedRunner,
     cwd: resolvedCwd,
     format: resolvedFormat,

@@ -53,7 +53,10 @@
   "checks": {
     "runner": "bun",
     "scripts": [
-      "check:format",
+      {
+        "check": "check:format",
+        "fix": "format"
+      },
       "build",
       "lint",
       "test"
