@@ -25,6 +25,11 @@
   ],
   "author": "",
   "license": "MIT",
+  "homepage": "https://github.com/agorischek/check-1-2",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agorischek/check-1-2.git"
+  },
   "dependencies": {
     "cleye": "^2.0.0",
     "ink": "^4.4.1",

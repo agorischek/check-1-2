@@ -1,5 +1,5 @@
 <p align="center">
-	<img width="180" src="./static/logo.png">
+	<img width="180" src="https://raw.githubusercontent.com/agorischek/check-1-2/refs/heads/main/static/logo.png">
 </p>
 <h1 align="center">
 	check 1, 2...
@@ -29,20 +29,9 @@ Add a `checks` array to your `package.json`:
   "scripts": {
     "lint": "eslint .",
     "test": "jest",
-    "build": "tsc"
+    "typecheck": "tsc --noEmit"
   },
-  "checks": ["lint", "test", "build"]
-}
-```
-
-Or use the object format with a custom runner:
-
-```json
-{
-  "checks": {
-    "runner": "bun",
-    "scripts": ["lint", "test", "build"]
-  }
+  "checks": ["test", "lint", "typecheck"]
 }
 ```
 
@@ -53,3 +42,16 @@ checks
 ```
 
   <img src="https://vhs.charm.sh/vhs-7nhGGOU7fQUhWcR5DPHnof.gif" alt="Demo output" width="600">
+
+## Options
+
+Set a customer runner with the `runner` option:
+
+```json
+{
+  "checks": {
+    "runner": "bun",
+    "scripts": ["lint", "test", "typecheck"]
+  }
+}
+```
