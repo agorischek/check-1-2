@@ -4,10 +4,14 @@ import { ResolvedOptions } from "./resolveOptions.js";
 
 export function getCheckCommands(
   options: ResolvedOptions,
+  fix: boolean = false,
 ): Array<{ name: string; command: string; runner: string }> {
   const { scripts, runner } = options;
 
-  return scripts.map(({ name }) => {
+  return scripts.map(({ check, fix: fixScript }) => {
+    // Use fix script if fix flag is set and fix script is available, otherwise use check
+    const scriptName = fix && fixScript ? fixScript : check;
+    
     // Always use script execution: npm run, bun run, yarn run, pnpm run
     let runCommand: string;
     if (
@@ -16,13 +20,13 @@ export function getCheckCommands(
       runner === "yarn" ||
       runner === "bun"
     ) {
-      runCommand = `${runner} run ${name}`;
+      runCommand = `${runner} run ${scriptName}`;
     } else {
-      runCommand = `${runner} ${name}`;
+      runCommand = `${runner} ${scriptName}`;
     }
 
     return {
-      name,
+      name: check, // Always use check name for display/identification
       command: runCommand,
       runner,
     };
@@ -31,8 +35,9 @@ export function getCheckCommands(
 
 export async function runChecks(
   options: ResolvedOptions,
+  fix: boolean = false,
 ): Promise<CheckResult[]> {
-  const checkCommands = getCheckCommands(options);
+  const checkCommands = getCheckCommands(options, fix);
 
   // Always run from package.json directory so package managers can find package.json
   const workingDir = options.cwd;
