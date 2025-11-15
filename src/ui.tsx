@@ -30,7 +30,7 @@ interface CheckUIProps {
   startTime: number | null;
 }
 
-function CheckItem({ result }: { result: CheckResult }) {
+function CheckItem({ result, isCI }: { result: CheckResult; isCI: boolean }) {
   const { stdout } = useStdout();
   const terminalWidth = stdout.columns || 80;
 
@@ -46,6 +46,17 @@ function CheckItem({ result }: { result: CheckResult }) {
   };
 
   const getStatusBgColor = () => {
+    switch (result.status) {
+      case "running":
+        return "gray";
+      case "success":
+        return "green";
+      case "failed":
+        return "red";
+    }
+  };
+
+  const getStatusColor = () => {
     switch (result.status) {
       case "running":
         return "gray";
@@ -130,13 +141,23 @@ function CheckItem({ result }: { result: CheckResult }) {
 
   return (
     <Box flexDirection="column" marginBottom={1}>
-      {/* Header: ┌ [ ✓ name ] */}
+      {/* Header: ┌ [ ✓ name ] or with background color in TTY */}
       <Box>
         <Text dimColor>┌ </Text>
-        <Text backgroundColor={getStatusBgColor()}>
-          {" "}
-          {getStatusSymbol()} <Text bold>{result.name}</Text>{" "}
-        </Text>
+        {isCI ? (
+          <Text>
+            <Text dimColor>[</Text>
+            <Text color={getStatusColor()}>
+              {getStatusSymbol()} <Text bold>{result.name}</Text>
+            </Text>
+            <Text dimColor>]</Text>
+          </Text>
+        ) : (
+          <Text backgroundColor={getStatusBgColor()}>
+            {" "}
+            {getStatusSymbol()} <Text bold>{result.name}</Text>{" "}
+          </Text>
+        )}
       </Box>
 
       {/* Blank line with bar after header */}
@@ -206,7 +227,7 @@ export function CheckUI({ results, allComplete, startTime }: CheckUIProps) {
       {/* Scrollable output area */}
       <Box flexDirection="column" flexGrow={1} padding={1}>
         {results.map((result) => (
-          <CheckItem key={result.name} result={result} />
+          <CheckItem key={result.name} result={result} isCI={isCI} />
         ))}
       </Box>
 
