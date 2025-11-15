@@ -92,7 +92,7 @@ function App() {
   useEffect(() => {
     async function execute() {
       try {
-        const fixFlag = argv.flags.fix ?? false;
+        const fixFlag = Boolean(argv.flags.fix);
         const checkCommands = getCheckCommands(options, fixFlag);
 
         const start = Date.now();

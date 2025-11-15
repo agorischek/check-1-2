@@ -8,29 +8,35 @@ export function getCheckCommands(
 ): Array<{ name: string; command: string; runner: string }> {
   const { scripts, runner } = options;
 
-  return scripts.map(({ check, fix: fixScript }) => {
-    // Use fix script if fix flag is set and fix script is available, otherwise use check
-    const scriptName = fix && fixScript ? fixScript : check;
+  return scripts
+    .filter(({ fix: fixScript }) => {
+      // When fix flag is set, only include scripts that have a fix script
+      // When fix flag is not set, include all scripts
+      return fix ? fixScript !== undefined : true;
+    })
+    .map(({ check, fix: fixScript }) => {
+      // Use fix script if fix flag is set, otherwise use check
+      const scriptName = fix ? fixScript! : check;
 
-    // Always use script execution: npm run, bun run, yarn run, pnpm run
-    let runCommand: string;
-    if (
-      runner === "npm" ||
-      runner === "pnpm" ||
-      runner === "yarn" ||
-      runner === "bun"
-    ) {
-      runCommand = `${runner} run ${scriptName}`;
-    } else {
-      runCommand = `${runner} ${scriptName}`;
-    }
+      // Always use script execution: npm run, bun run, yarn run, pnpm run
+      let runCommand: string;
+      if (
+        runner === "npm" ||
+        runner === "pnpm" ||
+        runner === "yarn" ||
+        runner === "bun"
+      ) {
+        runCommand = `${runner} run ${scriptName}`;
+      } else {
+        runCommand = `${runner} ${scriptName}`;
+      }
 
-    return {
-      name: check, // Always use check name for display/identification
-      command: runCommand,
-      runner,
-    };
-  });
+      return {
+        name: check, // Always use check name for display/identification
+        command: runCommand,
+        runner,
+      };
+    });
 }
 
 export async function runChecks(
