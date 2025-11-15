@@ -45,6 +45,18 @@ checks
 
 ## Options
 
+Include fix scripts when applicable, then use `checks --fix` to run:
+
+```json
+{
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "checks": [{ "check": "lint", "fix": "lint:fix" }]
+}
+```
+
 Set a custom runner (`bun`, `pnpm`, or `yarn`) with the `runner` option:
 
 ```json

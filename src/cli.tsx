@@ -39,7 +39,7 @@ const argv = cli({
     },
     fix: {
       type: Boolean,
-      description: "Run fix scripts instead of check scripts",
+      description: "Run fix scripts instead of check scripts, if available",
       default: false,
     },
   },
