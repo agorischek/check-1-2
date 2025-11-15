@@ -1,7 +1,7 @@
 {
   "name": "check-1-2",
   "version": "0.0.5",
-  "description": "Run multiple package.json scripts in parallel with a nice progress UI",
+  "description": "Run your validation scripts in parallel",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
