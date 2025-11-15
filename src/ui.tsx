@@ -140,7 +140,7 @@ function CheckItem({ result, isCI }: { result: CheckResult; isCI: boolean }) {
   const showOutput = result.status === "running" || outputLines.length > 0;
 
   return (
-    <Box flexDirection="column" marginBottom={1}>
+    <Box flexDirection="column" marginBottom={isCI ? 2 : 1}>
       {/* Header: ┌ [ ✓ name ] or with background color in TTY */}
       <Box>
         <Text dimColor>┌ </Text>
@@ -183,9 +183,13 @@ function CheckItem({ result, isCI }: { result: CheckResult; isCI: boolean }) {
 
       {/* Footer: └ (duration) */}
       {result.status !== "running" && (
-        <Text dimColor>
-          └ <Text dimColor>({formatDuration(result.duration)})</Text>
-        </Text>
+        <>
+          <Text dimColor>
+            └ <Text dimColor>({formatDuration(result.duration)})</Text>
+          </Text>
+          {/* Extra blank line in CI between sections */}
+          {isCI && <Text> </Text>}
+        </>
       )}
     </Box>
   );

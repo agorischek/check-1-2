@@ -166,7 +166,9 @@ describe("getCheckCommands", () => {
 
     writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
-    expect(() => resolveOptions({ flags: {} }, testDir)).toThrow('"checks" array is empty');
+    expect(() => resolveOptions({ flags: {} }, testDir)).toThrow(
+      '"checks" array is empty',
+    );
   });
 
   it("should throw error when script is missing", () => {
@@ -194,7 +196,9 @@ describe("getCheckCommands", () => {
 
     writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
-    expect(() => resolveOptions({ flags: {} }, testDir)).toThrow('Invalid "checks" format. Expected array or object with "scripts" property');
+    expect(() => resolveOptions({ flags: {} }, testDir)).toThrow(
+      'Invalid "checks" format. Expected array or object with "scripts" property',
+    );
   });
 
   it("should handle custom runner format", () => {

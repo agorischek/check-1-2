@@ -25,6 +25,11 @@ const argv = cli({
   },
 });
 
+// Enable colors in CI environments for Ink
+if (process.env.CI || !process.stdout.isTTY) {
+  process.env.FORCE_COLOR = "1";
+}
+
 const options = resolveOptions(argv, process.cwd());
 
 function App() {
