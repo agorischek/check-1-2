@@ -61,11 +61,13 @@ function CheckItem({ result }: { result: CheckResult }) {
 
   return (
     <Box flexDirection="column" marginBottom={1}>
+      {/* Blank line above header */}
+      <Text> </Text>
       {/* Header: Box with round outline containing script name and duration */}
-      <Box borderStyle="round" paddingX={1} flexDirection="row" marginTop={1}>
+      <Box borderStyle="round" paddingX={1} flexDirection="row">
         <Box flexGrow={1}>
-          <Text color={getStatusColor()}>
-            {getStatusSymbol()} <Text bold>{result.name}</Text>
+          <Text color={getStatusColor()} bold>
+            {getStatusSymbol()} {result.name}
           </Text>
         </Box>
         {result.status !== "running" && (
