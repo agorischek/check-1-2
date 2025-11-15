@@ -1,6 +1,6 @@
 {
   "name": "check-1-2",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Run multiple package.json scripts in parallel with a nice progress UI",
   "type": "module",
   "main": "dist/index.js",
