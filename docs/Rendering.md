@@ -10,6 +10,7 @@ The application supports two distinct renderers:
 2. **CIRenderer** - For CI environments and non-interactive terminals
 
 The renderer is selected automatically based on the `format` option, which can be:
+
 - `auto` (default) - Automatically detects based on environment (CI vs TTY)
 - `interactive` - Forces interactive renderer
 - `ci` - Forces CI renderer
@@ -19,6 +20,7 @@ The renderer is selected automatically based on the `format` option, which can b
 The format can be set in two ways:
 
 ### Via CLI Flag
+
 ```bash
 checks --format ci        # Force CI renderer
 checks --format interactive  # Force interactive renderer
@@ -26,6 +28,7 @@ checks --format auto      # Auto-detect (default)
 ```
 
 ### Via package.json
+
 ```json
 {
   "checks": {
@@ -43,6 +46,7 @@ Priority: CLI flag > package.json > default ("auto")
 ### The Problem
 
 Initially, we used explicit newline characters (`<Text>{'\n'}</Text>`) for spacing. This approach had issues:
+
 - Created excessive blank lines in local terminals
 - GitHub Actions collapsed consecutive blank lines, causing inconsistent rendering
 - Different environments rendered spacing differently
@@ -65,15 +69,16 @@ We switched to using **Box component margins** for spacing control:
 ## Renderer Differences
 
 ### InteractiveRenderer
+
 - Animated spinner for running checks
 - Background colors on status indicators
 - Always shows bottom status section
 - Optimized for TTY with real-time updates
 
 ### CIRenderer
+
 - Static indicators (no animation)
 - Round border boxes with script names
 - Duration shown inside header box
 - Bottom section only shown when all checks complete
 - Optimized for CI log readability
-
