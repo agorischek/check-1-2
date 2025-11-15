@@ -5,7 +5,7 @@ import { render, Text } from "ink";
 import { cli } from "cleye";
 import { getCheckCommands } from "./index.js";
 import { runCheck } from "./runner.js";
-import { CheckUI } from "./ui.js";
+import { selectRenderer } from "./renderers/index.js";
 import { CheckResult } from "./types.js";
 import { resolveOptions } from "./resolveOptions.js";
 
@@ -31,6 +31,9 @@ if (process.env.CI || !process.stdout.isTTY) {
 }
 
 const options = resolveOptions(argv, process.cwd());
+
+// Select renderer once at module level
+const Renderer = selectRenderer();
 
 function App() {
   const [results, setResults] = useState<CheckResult[]>([]);
@@ -97,7 +100,7 @@ function App() {
   }
 
   return (
-    <CheckUI
+    <Renderer
       results={results}
       allComplete={allComplete}
       startTime={startTime}
