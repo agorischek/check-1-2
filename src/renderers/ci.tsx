@@ -61,8 +61,8 @@ function CheckItem({ result }: { result: CheckResult }) {
 
   return (
     <Box flexDirection="column" marginBottom={1}>
-      {/* Header: Box with doubleSingle outline containing script name and duration */}
-      <Box borderStyle="doubleSingle" paddingX={1} flexDirection="row">
+      {/* Header: Box with round outline containing script name and duration */}
+      <Box borderStyle="round" paddingX={1} flexDirection="row" marginTop={1}>
         <Box flexGrow={1}>
           <Text color={getStatusColor()}>
             {getStatusSymbol()} <Text bold>{result.name}</Text>
