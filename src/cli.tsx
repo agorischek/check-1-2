@@ -2,10 +2,29 @@
 
 import React, { useEffect, useState } from "react";
 import { render, Text } from "ink";
+import { cli } from "cleye";
 import { getCheckCommands } from "./index.js";
 import { runCheck } from "./runner.js";
 import { CheckUI } from "./ui.js";
 import { CheckResult } from "./types.js";
+import { resolveOptions } from "./resolveOptions.js";
+
+const argv = cli({
+  name: "checks",
+  version: "0.0.2",
+  flags: {
+    cd: {
+      type: Boolean,
+      description: "Change directory to current working dir before running scripts",
+    },
+    runner: {
+      type: String,
+      description: "Runner to use (e.g., npx, npm, pnpm, yarn, bun)",
+    },
+  },
+});
+
+const options = resolveOptions(argv, process.cwd());
 
 function App() {
   const [results, setResults] = useState<CheckResult[]>([]);
@@ -16,8 +35,7 @@ function App() {
   useEffect(() => {
     async function execute() {
       try {
-        const checkCommands = getCheckCommands();
-        const cwd = process.cwd();
+        const checkCommands = getCheckCommands(options);
 
         const start = Date.now();
         setStartTime(start);
@@ -36,7 +54,7 @@ function App() {
 
         // Run checks in parallel and update results as they stream
         const promises = checkCommands.map(async ({ name, command }) => {
-          const result = await runCheck(name, command, cwd, (updatedResult) => {
+          const result = await runCheck(name, command, options.cwd, (updatedResult) => {
             // Update results in real-time as output streams
             setResults((prev) => {
               const updated = [...prev];

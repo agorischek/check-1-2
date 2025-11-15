@@ -5,7 +5,7 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "checks": "./dist/cli.js"
+    "checks": "dist/cli.js"
   },
   "scripts": {
     "checks": "bun run src/cli.tsx",
@@ -26,6 +26,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "cleye": "^2.0.0",
     "ink": "^4.4.1",
     "ora": "^9.0.0",
     "prettier": "^3.6.2",

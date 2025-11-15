@@ -37,7 +37,7 @@ function CheckItem({ result }: { result: CheckResult }) {
   const getStatusSymbol = () => {
     switch (result.status) {
       case "running":
-        return "...";
+        return "○";
       case "success":
         return "✓";
       case "failed":
@@ -119,7 +119,7 @@ function CheckItem({ result }: { result: CheckResult }) {
 
     // Show placeholder only if running and no output yet
     if (result.status === "running" && lines.length === 0) {
-      lines.push("...");
+      lines.push("…");
     }
 
     return lines;
@@ -135,7 +135,7 @@ function CheckItem({ result }: { result: CheckResult }) {
         <Text dimColor>┌ </Text>
         <Text backgroundColor={getStatusBgColor()}>
           {" "}
-          {getStatusSymbol()} {result.name}{" "}
+          {getStatusSymbol()} <Text bold>{result.name}</Text>{" "}
         </Text>
       </Box>
 
@@ -233,7 +233,7 @@ export function CheckUI({ results, allComplete, startTime }: CheckUIProps) {
             return (
               <Box key={result.name} flexDirection="row">
                 <Box width={2}>{statusElement}</Box>
-                <Text>{result.name}</Text>
+                <Text bold>{result.name}</Text>
               </Box>
             );
           })}
