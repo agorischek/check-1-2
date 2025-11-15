@@ -14,10 +14,10 @@ export interface CheckResult {
  */
 export type PackageJsonWithChecks = PackageJson & {
   checks?:
-    | string[]
+    | (string | { check: string; fix?: string })[]
     | {
         runner?: string;
         format?: "auto" | "interactive" | "ci";
-        scripts: string[];
+        scripts: (string | { check: string; fix?: string })[];
       };
 };

@@ -37,6 +37,11 @@ const argv = cli({
       type: String,
       description: "Output format: auto (default), interactive, or ci",
     },
+    fix: {
+      type: Boolean,
+      description: "Run fix scripts instead of check scripts",
+      default: false,
+    },
   },
 });
 
@@ -87,7 +92,8 @@ function App() {
   useEffect(() => {
     async function execute() {
       try {
-        const checkCommands = getCheckCommands(options);
+        const fixFlag = Boolean(argv.flags.fix);
+        const checkCommands = getCheckCommands(options, fixFlag);
 
         const start = Date.now();
         setStartTime(start);
