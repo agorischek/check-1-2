@@ -5,7 +5,7 @@
 	check 1, 2...
 </h1>
 <p align="center">
-<em>Run your validation scripts (test, lint, type-checking, etc.) in parallel.</em>
+<em>Run your validation scripts (test, lint, type-checking, etc.) in parallel</em>
 </p>
 
 ## Features
@@ -13,6 +13,7 @@
 - Real-time output streaming per script
 - CI-friendly
 - Supports npm, pnpm, yarn, and bun
+- Apply fixes with `--fix` flag
 
 ## Installation
 
@@ -45,7 +46,7 @@ checks
 
 ## Options
 
-Include fix scripts when applicable, then use `checks --fix` to run:
+Include `fix` scripts when applicable, then use `checks --fix` to run:
 
 ```json
 {
