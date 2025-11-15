@@ -15,7 +15,8 @@ const argv = cli({
   flags: {
     cd: {
       type: Boolean,
-      description: "Change directory to current working dir before running scripts",
+      description:
+        "Change directory to current working dir before running scripts",
     },
     runner: {
       type: String,
@@ -54,19 +55,24 @@ function App() {
 
         // Run checks in parallel and update results as they stream
         const promises = checkCommands.map(async ({ name, command }) => {
-          const result = await runCheck(name, command, options.cwd, (updatedResult) => {
-            // Update results in real-time as output streams
-            setResults((prev) => {
-              const updated = [...prev];
-              const index = updated.findIndex(
-                (r) => r.name === updatedResult.name,
-              );
-              if (index !== -1) {
-                updated[index] = updatedResult;
-              }
-              return updated;
-            });
-          });
+          const result = await runCheck(
+            name,
+            command,
+            options.cwd,
+            (updatedResult) => {
+              // Update results in real-time as output streams
+              setResults((prev) => {
+                const updated = [...prev];
+                const index = updated.findIndex(
+                  (r) => r.name === updatedResult.name,
+                );
+                if (index !== -1) {
+                  updated[index] = updatedResult;
+                }
+                return updated;
+              });
+            },
+          );
           return result;
         });
 

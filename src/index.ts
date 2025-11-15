@@ -18,7 +18,9 @@ export function getCheckCommands(
       const parts = scriptCommand.trim().split(/\s+/);
       const packageName = parts[0];
       const args = parts.slice(1).join(" ");
-      runCommand = args ? `npx -y ${packageName} ${args}` : `npx -y ${packageName}`;
+      runCommand = args
+        ? `npx -y ${packageName} ${args}`
+        : `npx -y ${packageName}`;
     } else if (
       runner === "npm" ||
       runner === "pnpm" ||

@@ -40,7 +40,7 @@ export function resolveOptions(
   }
 
   let scripts: string[];
-  let runner: string = "npx";
+  let runner: string = "npm";
 
   if (Array.isArray(checksConfig)) {
     // Legacy format: checks: ["lint", "type-check"]
@@ -48,7 +48,7 @@ export function resolveOptions(
   } else if (typeof checksConfig === "object" && checksConfig.scripts) {
     // New format: checks: { runner: "bun", scripts: ["lint", "type-check"] }
     scripts = checksConfig.scripts;
-    runner = checksConfig.runner || "npx";
+    runner = checksConfig.runner || "npm";
   } else {
     throw new Error(
       'Invalid "checks" format. Expected array or object with "scripts" property',
@@ -68,7 +68,7 @@ export function resolveOptions(
     throw new Error(`Missing scripts for checks: ${missing.join(", ")}`);
   }
 
-  // Resolve runner: CLI arg > package.json > default (npx)
+  // Resolve runner: CLI arg > package.json > default (npm)
   const resolvedRunner = cliArgs.flags.runner || runner;
 
   // Resolve cd flag: CLI arg (defaults to false)
