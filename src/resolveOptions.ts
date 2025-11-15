@@ -1,6 +1,6 @@
-import { readFileSync } from "fs";
-import { join } from "path";
-import { PackageJson } from "./types.js";
+import { dirname } from "path";
+import { readPackageUpSync, readPackageUp } from "read-package-up";
+import type { PackageJsonWithChecks } from "./types.js";
 
 export interface ResolvedOptions {
   scripts: Array<{ name: string; command: string }>;
@@ -18,22 +18,90 @@ export interface CLIArgs {
   };
 }
 
+export interface PackageResult {
+  packageJson: PackageJsonWithChecks;
+  path: string;
+  cwd: string;
+}
+
+/**
+ * Read both user's package.json and tool's package.json in parallel
+ */
+export async function readPackagesInParallel(
+  userCwd: string,
+  toolDir: string,
+): Promise<{ userPackage: PackageResult; toolPackage: PackageResult | null }> {
+  const [userResult, toolResult] = await Promise.all([
+    readPackageUp({ cwd: userCwd }),
+    readPackageUp({ cwd: toolDir }),
+  ]);
+
+  if (!userResult) {
+    throw new Error(`Failed to find package.json starting from ${userCwd}`);
+  }
+
+  const { packageJson: rawUserPackageJson, path: userPackageJsonPath } =
+    userResult;
+  const userPackageJson = rawUserPackageJson as PackageJsonWithChecks;
+  const userCwdResolved = dirname(userPackageJsonPath);
+
+  let toolPackageResult: PackageResult | null = null;
+  if (toolResult) {
+    const { packageJson: rawToolPackageJson, path: toolPackageJsonPath } =
+      toolResult;
+    const toolPackageJson = rawToolPackageJson as PackageJsonWithChecks;
+    const toolCwdResolved = dirname(toolPackageJsonPath);
+
+    toolPackageResult = {
+      packageJson: toolPackageJson,
+      path: toolPackageJsonPath,
+      cwd: toolCwdResolved,
+    };
+  }
+
+  return {
+    userPackage: {
+      packageJson: userPackageJson,
+      path: userPackageJsonPath,
+      cwd: userCwdResolved,
+    },
+    toolPackage: toolPackageResult,
+  };
+}
+
+/**
+ * Resolve options from a package result (backwards compatible wrapper)
+ */
 export function resolveOptions(
   cliArgs: CLIArgs,
-  cwd: string = process.cwd(),
+  cwdOrPackageResult: string | PackageResult = process.cwd(),
 ): ResolvedOptions {
-  // Read package.json
-  const packageJsonPath = join(cwd, "package.json");
-  let packageJson: PackageJson;
+  let packageResult: PackageResult;
 
-  try {
-    const content = readFileSync(packageJsonPath, "utf-8");
-    packageJson = JSON.parse(content);
-  } catch (error) {
-    throw new Error(
-      `Failed to read package.json: ${error instanceof Error ? error.message : String(error)}`,
-    );
+  if (typeof cwdOrPackageResult === "string") {
+    // Legacy synchronous path
+    const result = readPackageUpSync({ cwd: cwdOrPackageResult });
+
+    if (!result) {
+      throw new Error(
+        `Failed to find package.json starting from ${cwdOrPackageResult}`,
+      );
+    }
+
+    const { packageJson: rawPackageJson, path: packageJsonPath } = result;
+    const packageJson = rawPackageJson as PackageJsonWithChecks;
+    const resolvedCwd = dirname(packageJsonPath);
+
+    packageResult = {
+      packageJson,
+      path: packageJsonPath,
+      cwd: resolvedCwd,
+    };
+  } else {
+    packageResult = cwdOrPackageResult;
   }
+
+  const { packageJson, cwd: resolvedCwd } = packageResult;
 
   // Get checks - support both array and object syntax
   const checksConfig = packageJson.checks;
@@ -82,16 +150,17 @@ export function resolveOptions(
   const resolvedCd = cliArgs.flags.cd ?? false;
 
   // Map script names to their commands
+  // We've already validated all scripts exist, so they're guaranteed to be defined
   const scriptsWithCommands = scripts.map((name) => ({
     name,
-    command: packageScripts[name],
+    command: packageScripts[name]!,
   }));
 
   return {
     scripts: scriptsWithCommands,
     runner: resolvedRunner,
     cd: resolvedCd,
-    cwd,
+    cwd: resolvedCwd,
     format: resolvedFormat,
   };
 }

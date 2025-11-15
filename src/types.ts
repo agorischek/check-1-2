@@ -1,3 +1,5 @@
+import type { PackageJson } from "read-package-up";
+
 export interface CheckResult {
   name: string;
   status: "running" | "success" | "failed";
@@ -7,7 +9,10 @@ export interface CheckResult {
   duration: number;
 }
 
-export interface PackageJson {
+/**
+ * Extended PackageJson with our custom 'checks' property
+ */
+export type PackageJsonWithChecks = PackageJson & {
   checks?:
     | string[]
     | {
@@ -15,5 +20,4 @@ export interface PackageJson {
         format?: "auto" | "interactive" | "ci";
         scripts: string[];
       };
-  scripts?: Record<string, string>;
-}
+};

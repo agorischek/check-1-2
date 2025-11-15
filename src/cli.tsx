@@ -3,15 +3,31 @@
 import React, { useEffect, useState } from "react";
 import { render, Text } from "ink";
 import { cli } from "cleye";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 import { getCheckCommands } from "./index.js";
 import { runCheck } from "./runner.js";
 import { selectRenderer } from "./renderers/index.js";
 import { CheckResult } from "./types.js";
-import { resolveOptions } from "./resolveOptions.js";
+import { resolveOptions, readPackagesInParallel } from "./resolveOptions.js";
+
+// Get the directory where this module is located
+const __dirname = dirname(fileURLToPath(import.meta.url));
+// Get the tool's package root by going up from src/ directory
+const toolDir = dirname(__dirname);
+
+// Read both package.json files in parallel
+const { userPackage, toolPackage } = await readPackagesInParallel(
+  process.cwd(),
+  toolDir,
+);
+
+// Get version from tool's package.json, fallback to hardcoded version
+const toolVersion = toolPackage?.packageJson.version || "0.0.2";
 
 const argv = cli({
   name: "checks",
-  version: "0.0.2",
+  version: toolVersion,
   flags: {
     cd: {
       type: Boolean,
@@ -61,7 +77,7 @@ const options = resolveOptions(
           : undefined,
     },
   },
-  process.cwd(),
+  userPackage,
 );
 
 // Select renderer once at module level based on format option
