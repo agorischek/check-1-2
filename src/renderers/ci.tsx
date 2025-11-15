@@ -60,7 +60,7 @@ function CheckItem({ result }: { result: CheckResult }) {
   const showOutput = result.status === "running" || outputLines.length > 0;
 
   return (
-    <Box flexDirection="column" marginBottom={1} marginTop={1}>
+    <Box flexDirection="column" marginBottom={2} marginTop={1}>
       {/* Header: Box with round outline containing script name and duration */}
       <Box borderStyle="round" paddingX={1} flexDirection="row">
         <Box flexGrow={1}>
@@ -81,6 +81,9 @@ function CheckItem({ result }: { result: CheckResult }) {
           ))}
         </Box>
       )}
+
+      {/* Extra blank line in CI between sections */}
+      {result.status !== "running" && <Text> </Text>}
     </Box>
   );
 }
