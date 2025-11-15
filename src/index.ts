@@ -11,7 +11,7 @@ export function getCheckCommands(
   return scripts.map(({ check, fix: fixScript }) => {
     // Use fix script if fix flag is set and fix script is available, otherwise use check
     const scriptName = fix && fixScript ? fixScript : check;
-    
+
     // Always use script execution: npm run, bun run, yarn run, pnpm run
     let runCommand: string;
     if (
