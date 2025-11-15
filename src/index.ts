@@ -5,23 +5,12 @@ import { ResolvedOptions } from "./resolveOptions.js";
 export function getCheckCommands(
   options: ResolvedOptions,
 ): Array<{ name: string; command: string; runner: string }> {
-  const { scripts, runner, cd, cwd } = options;
+  const { scripts, runner } = options;
 
-  return scripts.map(({ name, command: scriptCommand }) => {
-    // Build command using npx (or specified runner)
-    // For npx, we run the actual script command with npx
-    // For other runners, use their standard format
+  return scripts.map(({ name }) => {
+    // Always use script execution: npm run, bun run, yarn run, pnpm run
     let runCommand: string;
-    if (runner === "npx") {
-      // Extract the first word (package name) from the script command
-      // e.g., "eslint ." -> "npx -y eslint ."
-      const parts = scriptCommand.trim().split(/\s+/);
-      const packageName = parts[0];
-      const args = parts.slice(1).join(" ");
-      runCommand = args
-        ? `npx -y ${packageName} ${args}`
-        : `npx -y ${packageName}`;
-    } else if (
+    if (
       runner === "npm" ||
       runner === "pnpm" ||
       runner === "yarn" ||
@@ -32,12 +21,9 @@ export function getCheckCommands(
       runCommand = `${runner} ${name}`;
     }
 
-    // If --cd flag is set, prepend cd command
-    const command = cd ? `cd ${cwd} && ${runCommand}` : runCommand;
-
     return {
       name,
-      command,
+      command: runCommand,
       runner,
     };
   });
@@ -48,9 +34,12 @@ export async function runChecks(
 ): Promise<CheckResult[]> {
   const checkCommands = getCheckCommands(options);
 
+  // Always run from package.json directory so package managers can find package.json
+  const workingDir = options.cwd;
+
   // Run all checks in parallel
   const promises = checkCommands.map(({ name, command }) => {
-    return runCheck(name, command, options.cwd);
+    return runCheck(name, command, workingDir);
   });
 
   const results = await Promise.all(promises);

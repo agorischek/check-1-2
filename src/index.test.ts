@@ -217,6 +217,7 @@ describe("getCheckCommands", () => {
     const options = resolveOptions({ flags: {} }, testDir);
     const commands = getCheckCommands(options);
 
+    // Custom runners use "runner name" format
     expect(commands[0].command).toBe("custom-runner lint");
   });
 });

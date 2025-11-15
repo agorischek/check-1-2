@@ -5,14 +5,12 @@ import type { PackageJsonWithChecks } from "./types.js";
 export interface ResolvedOptions {
   scripts: Array<{ name: string; command: string }>;
   runner: string;
-  cd: boolean;
   cwd: string;
   format: "auto" | "interactive" | "ci";
 }
 
 export interface CLIArgs {
   flags: {
-    cd?: boolean;
     runner?: string;
     format?: "auto" | "interactive" | "ci";
   };
@@ -146,9 +144,6 @@ export function resolveOptions(
   // Resolve format: CLI arg > package.json > default (auto)
   const resolvedFormat = cliArgs.flags.format || format;
 
-  // Resolve cd flag: CLI arg (defaults to false)
-  const resolvedCd = cliArgs.flags.cd ?? false;
-
   // Map script names to their commands
   // We've already validated all scripts exist, so they're guaranteed to be defined
   const scriptsWithCommands = scripts.map((name) => ({
@@ -159,7 +154,6 @@ export function resolveOptions(
   return {
     scripts: scriptsWithCommands,
     runner: resolvedRunner,
-    cd: resolvedCd,
     cwd: resolvedCwd,
     format: resolvedFormat,
   };

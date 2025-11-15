@@ -29,14 +29,9 @@ const argv = cli({
   name: "checks",
   version: toolVersion,
   flags: {
-    cd: {
-      type: Boolean,
-      description:
-        "Change directory to current working dir before running scripts",
-    },
     runner: {
       type: String,
-      description: "Runner to use (e.g., npx, npm, pnpm, yarn, bun)",
+      description: "Runner to use (e.g., npm, pnpm, yarn, bun)",
     },
     format: {
       type: String,
@@ -109,12 +104,15 @@ function App() {
 
         setResults(initialResults);
 
+        // Always run from package.json directory so package managers can find package.json
+        const workingDir = options.cwd;
+
         // Run checks in parallel and update results as they stream
         const promises = checkCommands.map(async ({ name, command }) => {
           const result = await runCheck(
             name,
             command,
-            options.cwd,
+            workingDir,
             (updatedResult) => {
               // Update results in real-time as output streams
               setResults((prev) => {
