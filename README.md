@@ -45,7 +45,7 @@ checks
 
 ## Options
 
-Set a customer runner with the `runner` option:
+Set a custom runner (`bun`, `pnpm`, or `yarn`) with the `runner` option:
 
 ```json
 {
