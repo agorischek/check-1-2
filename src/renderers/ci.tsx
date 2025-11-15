@@ -3,7 +3,7 @@ import { Box, Text, useApp } from "ink";
 import { CheckResult } from "../types.js";
 import { RendererProps } from "./types.js";
 
-function CheckItem({ result }: { result: CheckResult }) {
+function CheckItem({ result, isFirst }: { result: CheckResult; isFirst?: boolean }) {
   const getStatusSymbol = () => {
     switch (result.status) {
       case "running":
@@ -60,14 +60,12 @@ function CheckItem({ result }: { result: CheckResult }) {
   const showOutput = result.status === "running" || outputLines.length > 0;
 
   return (
-    <Box flexDirection="column" marginBottom={1}>
-      {/* Blank line above header */}
-      <Text> </Text>
+    <Box flexDirection="column" marginBottom={1} marginTop={isFirst ? 0 : 1}>
       {/* Header: Box with round outline containing script name and duration */}
       <Box borderStyle="round" paddingX={1} flexDirection="row">
         <Box flexGrow={1}>
-          <Text color={getStatusColor()} bold>
-            {getStatusSymbol()} {result.name}
+          <Text color={getStatusColor()}>
+            {getStatusSymbol()} <Text bold>{result.name}</Text>
           </Text>
         </Box>
         {result.status !== "running" && (
@@ -117,8 +115,8 @@ export function CIRenderer({ results, allComplete, startTime }: RendererProps) {
     <Box flexDirection="column" height="100%">
       {/* Scrollable output area */}
       <Box flexDirection="column" flexGrow={1} padding={1}>
-        {results.map((result) => (
-          <CheckItem key={result.name} result={result} />
+        {results.map((result, index) => (
+          <CheckItem key={result.name} result={result} isFirst={index === 0} />
         ))}
       </Box>
 
