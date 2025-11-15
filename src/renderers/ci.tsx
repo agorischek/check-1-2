@@ -69,8 +69,7 @@ function CheckItem({ result }: { result: CheckResult }) {
       </Box>
 
       {/* Blank lines after box */}
-      <Text> </Text>
-      <Text> </Text>
+      <Text>{'\n'}</Text>
 
       {/* Output lines */}
       {showOutput && (
@@ -83,18 +82,15 @@ function CheckItem({ result }: { result: CheckResult }) {
 
       {/* Blank lines after output, before duration */}
       {showOutput && result.status !== "running" && (
-        <>
-          <Text> </Text>
-          <Text> </Text>
-        </>
+        <Text>{'\n'}</Text>
       )}
 
       {/* Duration footer */}
       {result.status !== "running" && (
         <>
           <Text dimColor>({formatDuration(result.duration)})</Text>
-          <Text> </Text>
-          <Text> </Text>
+          <Text>{'\n'}</Text>
+          <Text>{'\n'}</Text>
         </>
       )}
     </Box>
