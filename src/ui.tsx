@@ -146,11 +146,11 @@ function CheckItem({ result, isCI }: { result: CheckResult; isCI: boolean }) {
         <Text dimColor>┌ </Text>
         {isCI ? (
           <Text>
-            <Text dimColor>[</Text>
+            <Text dimColor>[ </Text>
             <Text color={getStatusColor()}>
               {getStatusSymbol()} <Text bold>{result.name}</Text>
             </Text>
-            <Text dimColor>]</Text>
+            <Text dimColor> ]</Text>
           </Text>
         ) : (
           <Text backgroundColor={getStatusBgColor()}>
