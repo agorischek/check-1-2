@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { writeFileSync, unlinkSync, mkdirSync, rmdirSync } from "fs";
 import { join } from "path";
 import { getCheckCommands } from "./index.js";
+import { resolveOptions } from "./resolveOptions.js";
 
 describe("getCheckCommands", () => {
   const testDir = join(process.cwd(), ".test-tmp");
@@ -32,7 +33,8 @@ describe("getCheckCommands", () => {
 
     writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
-    const commands = getCheckCommands(testDir);
+    const options = resolveOptions({ flags: {} }, testDir);
+    const commands = getCheckCommands(options);
 
     expect(commands).toHaveLength(3);
     expect(commands[0]).toEqual({
@@ -66,7 +68,8 @@ describe("getCheckCommands", () => {
 
     writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
-    const commands = getCheckCommands(testDir);
+    const options = resolveOptions({ flags: {} }, testDir);
+    const commands = getCheckCommands(options);
 
     expect(commands).toHaveLength(2);
     expect(commands[0]).toEqual({
@@ -93,7 +96,8 @@ describe("getCheckCommands", () => {
 
     writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
-    const commands = getCheckCommands(testDir);
+    const options = resolveOptions({ flags: {} }, testDir);
+    const commands = getCheckCommands(options);
 
     expect(commands).toHaveLength(1);
     expect(commands[0].runner).toBe("npm");
@@ -113,7 +117,8 @@ describe("getCheckCommands", () => {
 
     writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
-    const commands = getCheckCommands(testDir);
+    const options = resolveOptions({ flags: {} }, testDir);
+    const commands = getCheckCommands(options);
 
     expect(commands[0].command).toBe("pnpm run lint");
   });
@@ -131,7 +136,8 @@ describe("getCheckCommands", () => {
 
     writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
-    const commands = getCheckCommands(testDir);
+    const options = resolveOptions({ flags: {} }, testDir);
+    const commands = getCheckCommands(options);
 
     expect(commands[0].command).toBe("yarn run lint");
   });
@@ -145,7 +151,7 @@ describe("getCheckCommands", () => {
 
     writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
-    expect(() => getCheckCommands(testDir)).toThrow(
+    expect(() => resolveOptions({ flags: {} }, testDir)).toThrow(
       'No "checks" property found in package.json',
     );
   });
@@ -160,7 +166,9 @@ describe("getCheckCommands", () => {
 
     writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
-    expect(() => getCheckCommands(testDir)).toThrow('"checks" array is empty');
+    expect(() => resolveOptions({ flags: {} }, testDir)).toThrow(
+      '"checks" array is empty',
+    );
   });
 
   it("should throw error when script is missing", () => {
@@ -173,7 +181,7 @@ describe("getCheckCommands", () => {
 
     writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
-    expect(() => getCheckCommands(testDir)).toThrow(
+    expect(() => resolveOptions({ flags: {} }, testDir)).toThrow(
       "Missing scripts for checks: missing-script",
     );
   });
@@ -188,7 +196,9 @@ describe("getCheckCommands", () => {
 
     writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
-    expect(() => getCheckCommands(testDir)).toThrow('Invalid "checks" format');
+    expect(() => resolveOptions({ flags: {} }, testDir)).toThrow(
+      'Invalid "checks" format. Expected array or object with "scripts" property',
+    );
   });
 
   it("should handle custom runner format", () => {
@@ -204,7 +214,8 @@ describe("getCheckCommands", () => {
 
     writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
-    const commands = getCheckCommands(testDir);
+    const options = resolveOptions({ flags: {} }, testDir);
+    const commands = getCheckCommands(options);
 
     expect(commands[0].command).toBe("custom-runner lint");
   });

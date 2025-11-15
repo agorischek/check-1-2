@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Box, Text, useApp, useStdout } from "ink";
-import { CheckResult } from "./types.js";
+import { CheckResult } from "../types.js";
+import { RendererProps } from "./types.js";
 
 // Simple spinner component
 function Spinner() {
@@ -10,8 +11,6 @@ function Spinner() {
   const frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 
   useEffect(() => {
-    // Only animate spinner in TTY environments
-    // In CI/non-TTY, show a static indicator
     if (!isTTY) return;
 
     const interval = setInterval(() => {
@@ -20,14 +19,7 @@ function Spinner() {
     return () => clearInterval(interval);
   }, [frames.length, isTTY]);
 
-  // In non-TTY (CI), show a static indicator instead of animated spinner
-  return <Text>{isTTY ? frames[frame] : "…"}</Text>;
-}
-
-interface CheckUIProps {
-  results: CheckResult[];
-  allComplete: boolean;
-  startTime: number | null;
+  return <Text>{frames[frame]}</Text>;
 }
 
 function CheckItem({ result }: { result: CheckResult }) {
@@ -130,7 +122,7 @@ function CheckItem({ result }: { result: CheckResult }) {
 
   return (
     <Box flexDirection="column" marginBottom={1}>
-      {/* Header: ┌ [ ✓ name ] */}
+      {/* Header: ┌ [ ✓ name ] with background color */}
       <Box>
         <Text dimColor>┌ </Text>
         <Text backgroundColor={getStatusBgColor()}>
@@ -170,12 +162,12 @@ function CheckItem({ result }: { result: CheckResult }) {
   );
 }
 
-export function CheckUI({ results, allComplete, startTime }: CheckUIProps) {
+export function InteractiveRenderer({
+  results,
+  allComplete,
+  startTime,
+}: RendererProps) {
   const { exit } = useApp();
-  const { stdout } = useStdout();
-
-  // Detect CI environment
-  const isCI = Boolean(process.env.CI || !stdout.isTTY);
 
   useEffect(() => {
     if (allComplete) {
@@ -197,10 +189,6 @@ export function CheckUI({ results, allComplete, startTime }: CheckUIProps) {
 
   const totalDuration = startTime ? Date.now() - startTime : 0;
 
-  // In CI, only show bottom section when all complete
-  // In TTY, always show it
-  const showBottomSection = !isCI || allComplete;
-
   return (
     <Box flexDirection="column" height="100%">
       {/* Scrollable output area */}
@@ -210,55 +198,52 @@ export function CheckUI({ results, allComplete, startTime }: CheckUIProps) {
         ))}
       </Box>
 
-      {/* Fixed bottom section - delayed in CI until completion */}
-      {showBottomSection && (
-        <Box
-          flexDirection="column"
-          borderTop={true}
-          paddingX={1}
-          paddingY={1}
-          marginTop={-1}
-        >
-          {/* List all checks with spinners/status */}
-          {results.map((result) => {
-            let statusElement: React.ReactNode;
-            if (result.status === "running") {
-              statusElement = <Spinner />;
-            } else if (result.status === "success") {
-              statusElement = <Text color="green">✓</Text>;
-            } else {
-              statusElement = <Text color="red">×</Text>;
-            }
+      {/* Fixed bottom section */}
+      <Box
+        flexDirection="column"
+        borderTop={true}
+        paddingX={1}
+        paddingY={1}
+        marginTop={-1}
+      >
+        {/* List all checks with spinners/status */}
+        {results.map((result) => {
+          let statusElement: React.ReactNode;
+          if (result.status === "running") {
+            statusElement = <Spinner />;
+          } else if (result.status === "success") {
+            statusElement = <Text color="green">✓</Text>;
+          } else {
+            statusElement = <Text color="red">×</Text>;
+          }
 
-            return (
-              <Box key={result.name} flexDirection="row">
-                <Box width={2}>{statusElement}</Box>
-                <Text bold>{result.name}</Text>
-              </Box>
-            );
-          })}
+          return (
+            <Box key={result.name} flexDirection="row">
+              <Box width={2}>{statusElement}</Box>
+              <Text bold>{result.name}</Text>
+            </Box>
+          );
+        })}
 
-          {/* Overall status line */}
-          <Box marginTop={1}>
-            {!allComplete ? (
-              <Text color="yellow">
-                Running...{" "}
-                <Text dimColor>({formatDuration(totalDuration)})</Text>
-              </Text>
-            ) : failedCount > 0 ? (
-              <Text color="red" bold>
-                {failedCount} {failedCount === 1 ? "check" : "checks"} failed{" "}
-                <Text dimColor>({formatDuration(totalDuration)})</Text>
-              </Text>
-            ) : (
-              <Text color="green" bold>
-                All checks passed{" "}
-                <Text dimColor>({formatDuration(totalDuration)})</Text>
-              </Text>
-            )}
-          </Box>
+        {/* Overall status line */}
+        <Box marginTop={1}>
+          {!allComplete ? (
+            <Text color="yellow">
+              Running... <Text dimColor>({formatDuration(totalDuration)})</Text>
+            </Text>
+          ) : failedCount > 0 ? (
+            <Text color="red" bold>
+              {failedCount} {failedCount === 1 ? "check" : "checks"} failed{" "}
+              <Text dimColor>({formatDuration(totalDuration)})</Text>
+            </Text>
+          ) : (
+            <Text color="green" bold>
+              All checks passed{" "}
+              <Text dimColor>({formatDuration(totalDuration)})</Text>
+            </Text>
+          )}
         </Box>
-      )}
+      </Box>
     </Box>
   );
 }
