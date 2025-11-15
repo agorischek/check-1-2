@@ -3,28 +3,44 @@
 import React, { useEffect, useState } from "react";
 import { render, Text } from "ink";
 import { cli } from "cleye";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 import { getCheckCommands } from "./index.js";
 import { runCheck } from "./runner.js";
 import { selectRenderer } from "./renderers/index.js";
 import { CheckResult } from "./types.js";
-import { resolveOptions } from "./resolveOptions.js";
+import { resolveOptions, readPackagesInParallel } from "./resolveOptions.js";
+
+// Get the directory where this module is located
+const __dirname = dirname(fileURLToPath(import.meta.url));
+// Get the tool's package root by going up from src/ directory
+const toolDir = dirname(__dirname);
+
+// Read both package.json files in parallel
+const { userPackage, toolPackage } = await readPackagesInParallel(
+  process.cwd(),
+  toolDir,
+);
+
+// Get version from tool's package.json, fallback to hardcoded version
+const toolVersion = toolPackage?.packageJson.version || "0.0.2";
 
 const argv = cli({
   name: "checks",
-  version: "0.0.2",
+  version: toolVersion,
   flags: {
-    cd: {
-      type: Boolean,
-      description:
-        "Change directory to current working dir before running scripts",
-    },
     runner: {
       type: String,
-      description: "Runner to use (e.g., npx, npm, pnpm, yarn, bun)",
+      description: "Runner to use (e.g., npm, pnpm, yarn, bun)",
     },
     format: {
       type: String,
       description: "Output format: auto (default), interactive, or ci",
+    },
+    fix: {
+      type: Boolean,
+      description: "Run fix scripts instead of check scripts, if available",
+      default: false,
     },
   },
 });
@@ -61,7 +77,7 @@ const options = resolveOptions(
           : undefined,
     },
   },
-  process.cwd(),
+  userPackage,
 );
 
 // Select renderer once at module level based on format option
@@ -76,7 +92,8 @@ function App() {
   useEffect(() => {
     async function execute() {
       try {
-        const checkCommands = getCheckCommands(options);
+        const fixFlag = Boolean(argv.flags.fix);
+        const checkCommands = getCheckCommands(options, fixFlag);
 
         const start = Date.now();
         setStartTime(start);
@@ -93,12 +110,15 @@ function App() {
 
         setResults(initialResults);
 
+        // Always run from package.json directory so package managers can find package.json
+        const workingDir = options.cwd;
+
         // Run checks in parallel and update results as they stream
         const promises = checkCommands.map(async ({ name, command }) => {
           const result = await runCheck(
             name,
             command,
-            options.cwd,
+            workingDir,
             (updatedResult) => {
               // Update results in real-time as output streams
               setResults((prev) => {

@@ -1,7 +1,7 @@
 {
   "name": "check-1-2",
-  "version": "0.0.2",
-  "description": "Run multiple package.json scripts in parallel with a nice progress UI",
+  "version": "0.0.6",
+  "description": "Run your validation scripts in parallel",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -25,12 +25,18 @@
   ],
   "author": "",
   "license": "MIT",
+  "homepage": "https://github.com/agorischek/check-1-2",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agorischek/check-1-2.git"
+  },
   "dependencies": {
     "cleye": "^2.0.0",
     "ink": "^4.4.1",
     "ora": "^9.0.0",
     "prettier": "^3.6.2",
-    "react": "^18.2.0"
+    "react": "^18.2.0",
+    "read-package-up": "^12.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
@@ -47,7 +53,10 @@
   "checks": {
     "runner": "bun",
     "scripts": [
-      "check:format",
+      {
+        "check": "check:format",
+        "fix": "format"
+      },
       "build",
       "lint",
       "test"

@@ -1,11 +1,11 @@
 <p align="center">
-	<img width="180" src="./static/logo.png">
+	<img width="180" src="https://raw.githubusercontent.com/agorischek/check-1-2/refs/heads/main/static/logo.png">
 </p>
 <h1 align="center">
 	check 1, 2...
 </h1>
 <p align="center">
-<em>Run your validation scripts (test, lint, type-checking, etc.) in parallel.</em>
+<em>Run your validation scripts (test, lint, type-checking, etc.) in parallel</em>
 </p>
 
 ## Features
@@ -13,6 +13,7 @@
 - Real-time output streaming per script
 - CI-friendly
 - Supports npm, pnpm, yarn, and bun
+- Apply fixes with `--fix` flag
 
 ## Installation
 
@@ -29,20 +30,9 @@ Add a `checks` array to your `package.json`:
   "scripts": {
     "lint": "eslint .",
     "test": "jest",
-    "build": "tsc"
+    "typecheck": "tsc --noEmit"
   },
-  "checks": ["lint", "test", "build"]
-}
-```
-
-Or use the object format with a custom runner:
-
-```json
-{
-  "checks": {
-    "runner": "bun",
-    "scripts": ["lint", "test", "build"]
-  }
+  "checks": ["test", "lint", "typecheck"]
 }
 ```
 
@@ -53,3 +43,28 @@ checks
 ```
 
   <img src="https://vhs.charm.sh/vhs-7nhGGOU7fQUhWcR5DPHnof.gif" alt="Demo output" width="600">
+
+## Options
+
+Include `fix` scripts when applicable, then use `checks --fix` to run:
+
+```json
+{
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "checks": [{ "check": "lint", "fix": "lint:fix" }]
+}
+```
+
+Set a custom runner (`bun`, `pnpm`, or `yarn`) with the `runner` option:
+
+```json
+{
+  "checks": {
+    "runner": "bun",
+    "scripts": ["lint", "test", "typecheck"]
+  }
+}
+```
