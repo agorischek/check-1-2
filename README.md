@@ -5,8 +5,13 @@
 	check 1, 2...
 </h1>
 <p align="center">
-<em>Run your validation scripts (test, lint, type-checking, etc.) in parallel</em>
+<em>Run your validation scripts (test, lint, typecheck, etc.) in parallel</em>
 </p>
+<p align="center">
+<a href="https://www.npmjs.com/package/check-1-2" title="Version"><img src="https://img.shields.io/npm/v/check-1-2" alt="Version"></a>
+<a href="https://github.com/agorischek/check-1-2/actions/workflows/.github/workflows/ci.yml" title="Workflow"><img src="https://img.shields.io/github/actions/workflow/status/agorischek/check-1-2/.github/workflows/ci.yml" alt="Workflow"></a>
+<a href="https://github.com/agorischek/check-1-2/blob/main/LICENSE" title="License"><img src="https://img.shields.io/github/license/agorischek/check-1-2" alt="License"></a>
+
 
 ## Features
 
