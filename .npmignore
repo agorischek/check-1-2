@@ -12,6 +12,7 @@ src/
 
 # Development files
 tsconfig.json
+tsconfig.build.json
 eslint.config.ts
 .prettierrc*
 .prettierignore
@@ -53,3 +54,6 @@ demo/
 
 # Static files
 static/
+
+# Internal docs
+docs/
