@@ -22,6 +22,10 @@ const argv = cli({
       type: String,
       description: "Runner to use (e.g., npx, npm, pnpm, yarn, bun)",
     },
+    format: {
+      type: String,
+      description: "Output format: auto (default), interactive, or ci",
+    },
   },
 });
 
@@ -30,10 +34,38 @@ if (process.env.CI || !process.stdout.isTTY) {
   process.env.FORCE_COLOR = "1";
 }
 
-const options = resolveOptions(argv, process.cwd());
+// Validate format flag
+const formatFlag = argv.flags.format;
+if (
+  formatFlag &&
+  formatFlag !== "auto" &&
+  formatFlag !== "interactive" &&
+  formatFlag !== "ci"
+) {
+  console.error(
+    `Invalid format: "${formatFlag}". Must be one of: auto, interactive, ci`,
+  );
+  process.exit(1);
+}
 
-// Select renderer once at module level
-const Renderer = selectRenderer();
+const options = resolveOptions(
+  {
+    ...argv,
+    flags: {
+      ...argv.flags,
+      format:
+        formatFlag === "auto" ||
+        formatFlag === "interactive" ||
+        formatFlag === "ci"
+          ? formatFlag
+          : undefined,
+    },
+  },
+  process.cwd(),
+);
+
+// Select renderer once at module level based on format option
+const Renderer = selectRenderer(options.format);
 
 function App() {
   const [results, setResults] = useState<CheckResult[]>([]);

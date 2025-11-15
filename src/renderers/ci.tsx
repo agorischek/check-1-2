@@ -61,37 +61,25 @@ function CheckItem({ result }: { result: CheckResult }) {
 
   return (
     <Box flexDirection="column" marginBottom={1} marginTop={1}>
-      {/* Header: Box with round outline containing script name */}
+      {/* Header: Box with round outline containing script name and duration */}
       <Box borderStyle="round" paddingX={1} flexDirection="row">
-        <Text color={getStatusColor()} bold>
-          {getStatusSymbol()} {result.name}
-        </Text>
+        <Box flexGrow={1}>
+          <Text color={getStatusColor()} bold>
+            {getStatusSymbol()} {result.name}
+          </Text>
+        </Box>
+        {result.status !== "running" && (
+          <Text dimColor>({formatDuration(result.duration)})</Text>
+        )}
       </Box>
-
-      {/* Blank lines after box */}
-      <Text>{'\n'}</Text>
 
       {/* Output lines */}
       {showOutput && (
-        <Box flexDirection="column">
+        <Box flexDirection="column" marginTop={1}>
           {outputLines.map((line, index) => (
             <Text key={index}>{line || " "}</Text>
           ))}
         </Box>
-      )}
-
-      {/* Blank lines after output, before duration */}
-      {showOutput && result.status !== "running" && (
-        <Text>{'\n'}</Text>
-      )}
-
-      {/* Duration footer */}
-      {result.status !== "running" && (
-        <>
-          <Text dimColor>({formatDuration(result.duration)})</Text>
-          <Text>{'\n'}</Text>
-          <Text>{'\n'}</Text>
-        </>
       )}
     </Box>
   );

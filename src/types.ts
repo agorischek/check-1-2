@@ -8,6 +8,12 @@ export interface CheckResult {
 }
 
 export interface PackageJson {
-  checks?: string[] | { runner?: string; scripts: string[] };
+  checks?:
+    | string[]
+    | {
+        runner?: string;
+        format?: "auto" | "interactive" | "ci";
+        scripts: string[];
+      };
   scripts?: Record<string, string>;
 }

@@ -7,12 +7,14 @@ export interface ResolvedOptions {
   runner: string;
   cd: boolean;
   cwd: string;
+  format: "auto" | "interactive" | "ci";
 }
 
 export interface CLIArgs {
   flags: {
     cd?: boolean;
     runner?: string;
+    format?: "auto" | "interactive" | "ci";
   };
 }
 
@@ -41,14 +43,16 @@ export function resolveOptions(
 
   let scripts: string[];
   let runner: string = "npm";
+  let format: "auto" | "interactive" | "ci" = "auto";
 
   if (Array.isArray(checksConfig)) {
     // Legacy format: checks: ["lint", "type-check"]
     scripts = checksConfig;
   } else if (typeof checksConfig === "object" && checksConfig.scripts) {
-    // New format: checks: { runner: "bun", scripts: ["lint", "type-check"] }
+    // New format: checks: { runner: "bun", format: "ci", scripts: ["lint", "type-check"] }
     scripts = checksConfig.scripts;
     runner = checksConfig.runner || "npm";
+    format = checksConfig.format || "auto";
   } else {
     throw new Error(
       'Invalid "checks" format. Expected array or object with "scripts" property',
@@ -71,6 +75,9 @@ export function resolveOptions(
   // Resolve runner: CLI arg > package.json > default (npm)
   const resolvedRunner = cliArgs.flags.runner || runner;
 
+  // Resolve format: CLI arg > package.json > default (auto)
+  const resolvedFormat = cliArgs.flags.format || format;
+
   // Resolve cd flag: CLI arg (defaults to false)
   const resolvedCd = cliArgs.flags.cd ?? false;
 
@@ -85,5 +92,6 @@ export function resolveOptions(
     runner: resolvedRunner,
     cd: resolvedCd,
     cwd,
+    format: resolvedFormat,
   };
 }
