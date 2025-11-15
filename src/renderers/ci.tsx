@@ -60,32 +60,26 @@ function CheckItem({ result }: { result: CheckResult }) {
   const showOutput = result.status === "running" || outputLines.length > 0;
 
   return (
-    <Box flexDirection="column" marginBottom={2}>
-      {/* Header: Box with doubleSingle outline containing script name */}
-      <Box borderStyle="doubleSingle" paddingX={1}>
-        <Text color={getStatusColor()}>
-          {getStatusSymbol()} <Text bold>{result.name}</Text>
-        </Text>
+    <Box flexDirection="column" marginBottom={1}>
+      {/* Header: Box with doubleSingle outline containing script name and duration */}
+      <Box borderStyle="doubleSingle" paddingX={1} flexDirection="row">
+        <Box flexGrow={1}>
+          <Text color={getStatusColor()}>
+            {getStatusSymbol()} <Text bold>{result.name}</Text>
+          </Text>
+        </Box>
+        {result.status !== "running" && (
+          <Text dimColor>({formatDuration(result.duration)})</Text>
+        )}
       </Box>
 
       {/* Output lines */}
       {showOutput && (
-        <Box flexDirection="column" marginTop={1}>
+        <Box flexDirection="column" marginTop={0}>
           {outputLines.map((line, index) => (
             <Text key={index}>{line || " "}</Text>
           ))}
         </Box>
-      )}
-
-      {/* Footer: (duration) */}
-      {result.status !== "running" && (
-        <>
-          <Box marginTop={1}>
-            <Text dimColor>({formatDuration(result.duration)})</Text>
-          </Box>
-          {/* Extra blank line in CI between sections */}
-          <Text> </Text>
-        </>
       )}
     </Box>
   );
