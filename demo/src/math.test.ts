@@ -1,3 +1,4 @@
+import { describe, expect, test } from "bun:test";
 import { add } from "./math";
 
 describe("math functions", () => {
