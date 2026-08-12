@@ -1,6 +1,6 @@
 {
   "name": "check-1-2",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Run your validation scripts in parallel",
   "type": "module",
   "main": "dist/index.js",
